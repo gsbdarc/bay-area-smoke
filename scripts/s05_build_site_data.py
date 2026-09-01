@@ -145,7 +145,9 @@ def climatology(panel: pd.DataFrame) -> dict:
 
         p_aqi, p_smoke = [], []
         pm_med, pm_p90, sm_p90 = [], [], []
-        n_years_list, worst_year, worst_val = [], [], []
+        n_obs_aqi, n_obs_smoke = [], []
+        n_years_aqi, n_years_smoke = [], []
+        worst_year, worst_val = [], []
         years_hit_aqi, years_hit_smoke = [], []
 
         for s in range(N_SLOTS):
@@ -168,9 +170,25 @@ def climatology(panel: pd.DataFrame) -> dict:
             pm_p90.append(round(float(wa["pm25"].quantile(0.9)), 1) if len(wa) else None)
             sm_p90.append(round(float(ws["smoke_pm"].quantile(0.9)), 1) if len(ws) else None)
 
-            # Per-year counts drive the click-through card: "smoky in 6 of 17
-            # years". Counted over the window, on the same qualifying years.
-            n_years_list.append(len(ok_smk) or len(ok_aqi))
+            # Two different statistics, and they must not be mixed up.
+            #
+            # `p_*` above is a PER-DAY rate: exceedances divided by
+            # day-observations (years x ~15 window days). It answers "if I book
+            # this date, how likely is it to be bad?"
+            #
+            # `years_hit_*` is a PER-YEAR count: in how many years did at least
+            # one day in the window exceed. It is always the larger-looking
+            # number, because bad days cluster into episodes -- San Jose around
+            # 22 November is 7% of days but 39% of years.
+            #
+            # Each needs ITS OWN denominator. A year can qualify for AQI and not
+            # for smoke, so a single shared `n_years` silently paired an AQI
+            # numerator with a smoke denominator: 9 of 23 was published as
+            # "9 of 20".
+            n_obs_aqi.append(int(len(wa)))
+            n_obs_smoke.append(int(len(ws)))
+            n_years_aqi.append(len(ok_aqi))
+            n_years_smoke.append(len(ok_smk))
             years_hit_aqi.append(
                 int(wa.groupby("year")["hit_aqi"].any().sum()) if len(wa) else 0
             )
@@ -192,7 +210,10 @@ def climatology(panel: pd.DataFrame) -> dict:
             "pm25_median": pm_med,
             "pm25_p90": pm_p90,
             "smoke_p90": sm_p90,
-            "n_years": n_years_list,
+            "n_years_aqi": n_years_aqi,
+            "n_years_smoke": n_years_smoke,
+            "n_obs_aqi": n_obs_aqi,
+            "n_obs_smoke": n_obs_smoke,
             "years_hit_aqi": years_hit_aqi,
             "years_hit_smoke": years_hit_smoke,
             "worst_year": worst_year,
