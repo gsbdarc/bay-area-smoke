@@ -45,6 +45,8 @@ const METRICS = {
   smoke: {
     key: "p_smoke",
     hitKey: "years_hit_smoke",
+    yearsKey: "n_years_smoke",
+    obsKey: "n_obs_smoke",
     series: "smoke_pm",
     srcKey: "smoke_src",
     label: "Chance of a smoky day",
@@ -58,6 +60,8 @@ const METRICS = {
   aqi: {
     key: "p_aqi",
     hitKey: "years_hit_aqi",
+    yearsKey: "n_years_aqi",
+    obsKey: "n_obs_aqi",
     series: "aqi",
     srcKey: "pm25_src",
     label: "Chance of an unhealthy day",
@@ -100,7 +104,12 @@ function prettyDate(label) {
   return `${d} ${full[m - 1]}`;
 }
 
-const pct = (v) => (v == null ? "—" : `${Math.round(v * 100)}%`);
+/** A rate that rounds to 0% but is not zero reads as "never"; it is not. */
+const pct = (v) => {
+  if (v == null) return "—";
+  if (v > 0 && v < 0.005) return "<1%";
+  return `${Math.round(v * 100)}%`;
+};
 
 /** Read the CSS custom properties so the plots follow the active theme. */
 function tokens() {
@@ -174,7 +183,10 @@ function calendarRows(slug, metricKey) {
       monthName: MONTHS[m - 1],
       label: labels[s],
       p: rows[metricKey][s],
-      nYears: rows.n_years[s],
+      // Denominators are per-metric: a year can have enough AQI data and not
+      // enough smoke data, so these must not be shared.
+      nYears: rows[METRICS[state.metric].yearsKey][s],
+      nObs: rows[METRICS[state.metric].obsKey][s],
       hit: rows[METRICS[state.metric].hitKey][s],
       worstYear: rows.worst_year[s],
       worstPM: rows.worst_pm25[s],
@@ -271,8 +283,8 @@ function renderCalendar() {
               ? `${prettyDate(d.label)}\nNo usable record`
               : [
                   prettyDate(d.label),
-                  `${pct(d.p)} chance`,
-                  `${d.hit} of ${d.nYears} years`,
+                  `${pct(d.p)} chance on this day`,
+                  `${d.hit} of ${d.nYears} years had one within ±7 days`,
                   d.worstYear ? `worst ${d.worstYear}: ${d.worstPM} µg/m³` : "",
                 ].filter(Boolean).join("\n"),
           fontSize: 12,
@@ -293,14 +305,16 @@ function renderCalendar() {
   });
 
   const loc = state.meta.locations.find((l) => l.slug === state.location);
-  $("#cal-lede").textContent =
+  $("#cal-lede").innerHTML =
     `How often ${loc.name} has ${M.thresholdText(
       state.metric === "smoke"
         ? state.meta.thresholds.smoke_pm
         : state.meta.thresholds.aqi
-    )}, on each calendar date. Each cell pools a ±${state.meta.window_days}-day ` +
-    `window across every year with adequate data, so one freak afternoon does ` +
-    `not define a date. Click a day for the detail.`;
+    )}, on each calendar date. Colour is the chance that <em>that single day</em> ` +
+    `is bad — pooled over a ±${state.meta.window_days}-day window across every ` +
+    `year with adequate data, so one freak afternoon does not define a date. ` +
+    `Click a day for the detail, including how many separate years were ` +
+    `affected.`;
 
   $("#cal-caption").textContent =
     `Darker means smokier. Hatched means no usable record at this location — not a clean day. ` +
@@ -335,15 +349,29 @@ function renderDayCard(d) {
   }
 
   el.className = "daycard";
+  const w = state.meta.window_days;
+  const noun = state.metric === "smoke" ? "smoky" : "unhealthy";
   const worst = d.worstYear
-    ? ` Worst on record nearby: <strong>${d.worstYear}</strong> at ${d.worstPM} µg/m³.`
+    ? ` Worst nearby: <strong>${d.worstYear}</strong>, ${d.worstPM} µg/m³.`
     : "";
+
+  // Two statistics that are easy to mistake for one another, so they are
+  // stated as separate sentences with their own denominators. The per-day rate
+  // is the headline because it answers the question the site exists for --
+  // "should I book this date?" -- and the per-year count is always the bigger,
+  // scarier-looking number because bad days arrive in multi-day episodes.
+  const yearPct = d.nYears ? Math.round((100 * d.hit) / d.nYears) : null;
   el.innerHTML =
     `<span class="dc-date">${prettyDate(d.label)} in ${loc.name}</span>` +
     `<span class="dc-big">${pct(d.p)}</span> ` +
-    `<span class="dc-muted">${M.label.toLowerCase()} — ` +
-    `${d.hit} of ${d.nYears} years with adequate data had one in the ` +
-    `±${state.meta.window_days}-day window.${worst}</span>`;
+    `<span class="dc-muted">chance that <em>this day itself</em> is ` +
+    `${noun} — ${Math.round(d.p * d.nObs)} of ${d.nObs} ` +
+    `days observed within ±${w} days of it, across ${d.nYears} years.` +
+    `<br>Zoomed out: in <strong>${d.hit} of those ${d.nYears} years</strong>` +
+    (yearPct != null ? ` (${yearPct}%)` : "") +
+    `, at least one day in that ±${w}-day window was ${noun} — higher, ` +
+    `because ${noun} days come in multi-day episodes rather than singly.` +
+    worst + `</span>`;
 }
 
 /** The table view, so identity and magnitude are never colour-only. */
