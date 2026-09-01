@@ -1,6 +1,11 @@
 # ---- Raw data: never committed, never edited in place ----
 data/raw/
 
+# ---- Intermediate panels: regenerable from raw, so version the recipe
+# not the output. The one exception is the ECHOLab Bay Area subset, which
+# is expensive to rebuild (1.8 GB download) and IS committed -- see issue #5.
+data/processed/*.parquet
+
 # ---- Secrets ----
 .env
 *.env
