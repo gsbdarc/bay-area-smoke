@@ -49,6 +49,7 @@ STAGES: list[tuple[str, str, bool]] = [
     ("bootstrap/b02_pick_grid_cells.py", "grid cells + smoke extract", False),
     ("s01_fetch_epa_bulk.py", "EPA bulk PM2.5 2000-present", False),
     ("s02_fetch_epa_api.py", "EPA AQS API (provisional tail)", True),
+    ("s02b_fetch_airnow.py", "AirNow daily files (fills the AQS hole)", True),
     ("s03_fetch_hms.py", "NOAA HMS smoke plumes", True),
     ("s04_build_smoke.py", "build panel + attribute smoke", True),
     ("s05_build_site_data.py", "site JSON", True),
@@ -84,6 +85,10 @@ def build(args: argparse.Namespace) -> None:
                 continue
             if args.require_api:
                 extra.append("--require-api")
+        if script.startswith("s02b") and args.refresh_only:
+            # ~600 daily files exist; the committed parquet already holds all
+            # but the last few. Merge rather than re-fetch two years of them.
+            extra.append("--merge")
         if script.startswith("s03") and args.refresh_only:
             # Only the current year changes; earlier years are already in the
             # committed parquet.

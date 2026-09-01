@@ -37,7 +37,7 @@ four rather than drawing one confident-looking line:
 | Layer | Range | Provenance |
 |---|---|---|
 | Total PM2.5 | 2000 – 2024 | EPA AirData bulk, agency-certified |
-| Total PM2.5 | 2025 – present | EPA AQS API, **provisional — and only some locations** (see below) |
+| Total PM2.5 | 2025 – present | EPA AQS API + **AirNow real-time feed**, provisional (see below) |
 | Smoke PM2.5 | 2006 – 2023 | Stanford ECHOLab v2, published |
 | Smoke PM2.5 | 2024 – present | **Our extension** of their method, where a monitor still exists |
 
@@ -57,11 +57,21 @@ arriving piecemeal, site by site** — Oakland and Concord first, with San
 Francisco, Santa Clara, Sonoma and Napa still empty at the time of writing.
 Sites run by other agencies (Point Reyes, Santa Cruz) were never affected.
 
-So the size of the hole is genuinely in flux, and any number written here goes
-stale. **The authoritative answer is the per-location coverage in
+**We no longer wait for it.** The same agency pushes the same monitors to
+**AirNow** in real time, and AirNow's daily files are public and keyless. Stage
+`s02b` reads them and fills whatever AQS is missing, which closes 2025–26 for
+San Francisco, Oakland, Redwood City, San Jose, Sebastopol and Santa Cruz.
+It is the same instruments through a less-processed channel, so it is labelled
+`provisional-airnow` and ranked *below* both certified bulk and the AQS API —
+it only ever fills a hole, never overwrites a better number.
+
+Livermore is absent from AirNow entirely, and Napa and Half Moon Bay have no
+monitor to report, so those three still end where their instruments do.
+
+The size of the hole remains in flux, and any number written here goes stale.
+**The authoritative answer is the per-location coverage in
 `site/data/locations.json`**, regenerated on every build and shown in the site's
-methods table. The monthly refresh picks up new submissions automatically; no
-code change is needed when a county appears.
+methods table.
 
 None of this touches the headline view — the seasonal risk calendar rests on
 2006–2024, close to two decades. It only shortens the tail of the time series,
@@ -119,6 +129,7 @@ the pipeline respects both.
 | `scripts/bootstrap/b02_pick_grid_cells.py` | `data/processed/grid_cells.csv`, `echolab_smokepm.parquet` |
 | `scripts/s01_fetch_epa_bulk.py` | `data/processed/epa_daily_bulk.parquet` (2000–2024 certified) |
 | `scripts/s02_fetch_epa_api.py` | `data/processed/epa_daily_api.parquet` (2025→, provisional) |
+| `scripts/s02b_fetch_airnow.py` | `data/processed/airnow_daily.parquet` (2025→, fills the AQS hole) |
 | `scripts/s03_fetch_hms.py` | `data/processed/smoke_days.parquet` |
 | `scripts/s04_build_smoke.py` | `data/processed/daily_panel.parquet`, `crossval.json` |
 | `scripts/s05_build_site_data.py` | `site/data/*.json` → the charts |
