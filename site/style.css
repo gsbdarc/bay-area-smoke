@@ -18,19 +18,26 @@
   --baseline:       #c3c2b7;
   --border:         rgba(11, 11, 11, 0.10);
 
-  /* Sequential ramp -- one hue, light to dark. Used for every magnitude
+  /* Sequential ramp -- ONE hue, low to high. Used for every magnitude
    * encoding on the page, so the calendar and the small multiples are
-   * directly comparable. */
-  --seq-100: #cde2fb;
-  --seq-200: #9ec5f4;
-  --seq-300: #6da7ec;
-  --seq-400: #3987e5;
-  --seq-500: #256abf;
-  --seq-600: #184f95;
-  --seq-700: #0d366b;
+   * directly comparable.
+   *
+   * Purple, because this is air quality and the AQI scale's upper categories
+   * are the colours people already recognise. It is deliberately a single-hue
+   * ramp and NOT the green-yellow-orange-red-purple AQI scale: the calendar
+   * encodes a *probability*, and painting a 25% chance maroon would say
+   * "hazardous" when it means "one year in four". The real AQI colours are
+   * used further down the page, where the values genuinely are AQI. */
+  --seq-100: #f6ecf8;
+  --seq-200: #e4c9ea;
+  --seq-300: #cfa4da;
+  --seq-400: #b77fc5;
+  --seq-500: #9d5aa9;
+  --seq-600: #8f3f97;   /* the AQI "Very Unhealthy" purple */
+  --seq-700: #6b2a75;
 
-  --series-1:  #2a78d6;
-  --accent:    #2a78d6;
+  --series-1:  #8f3f97;
+  --accent:    #8f3f97;
   --critical:  #d03b3b;
   --no-data:   #e8e7e2;      /* legend swatch for "no data" */
   --no-data-ink: #a9a7a0;    /* hatch stroke -- see addHatch() in app.js */
@@ -51,8 +58,17 @@
     --grid:           #2c2c2a;
     --baseline:       #383835;
     --border:         rgba(255, 255, 255, 0.10);
-    --series-1:       #3987e5;
-    --accent:         #3987e5;
+    /* Dark mode is stepped for the dark surface, not flipped: the ramp runs
+     * near-surface -> bright so "more ink" still means "more risk". */
+    --seq-100: #2a1430;
+    --seq-200: #43204c;
+    --seq-300: #5f2c6b;
+    --seq-400: #7d3a8a;
+    --seq-500: #9d5aa9;
+    --seq-600: #bb87ca;
+    --seq-700: #e9cef0;
+    --series-1:       #c98fd4;
+    --accent:         #b77fc5;
     --no-data:        #2a2a28;
     --no-data-ink:    #6e6c66;
   }
@@ -68,8 +84,15 @@
   --grid:           #2c2c2a;
   --baseline:       #383835;
   --border:         rgba(255, 255, 255, 0.10);
-  --series-1:       #3987e5;
-  --accent:         #3987e5;
+  --seq-100: #2a1430;
+  --seq-200: #43204c;
+  --seq-300: #5f2c6b;
+  --seq-400: #7d3a8a;
+  --seq-500: #9d5aa9;
+  --seq-600: #bb87ca;
+  --seq-700: #e9cef0;
+  --series-1:       #c98fd4;
+  --accent:         #b77fc5;
   --no-data:        #2a2a28;
   --no-data-ink:    #6e6c66;
 }
@@ -285,6 +308,33 @@ thead th {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
+/* ---------------------------------------------------- AQI band legend */
+
+.aqi-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.aqi-legend-label { color: var(--text-muted); font-weight: 600; }
+
+.aqi-chip { display: inline-flex; align-items: center; gap: 6px; }
+
+.aqi-chip i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  /* A hairline ring keeps pale yellow visible on the light surface. */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  flex: none;
+}
+
+.aqi-range { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------- coverage */
 

@@ -4,8 +4,8 @@
  *
  * Design notes worth keeping in view while editing:
  *
- * - Every magnitude encoding on this page uses ONE sequential ramp (blue,
- *   light to dark) on ONE shared domain. That is what lets you compare the
+ * - Every magnitude encoding on this page uses ONE single-hue sequential ramp
+ *   (purple) on ONE shared domain. That is what lets you compare the
  *   headline calendar against the ten-location strip, and one location against
  *   another, without doing arithmetic in your head.
  * - "No data" is painted as a diagonal hatch, not a tone. Any flat grey lands
@@ -20,11 +20,46 @@ import * as Plot from "https://esm.sh/@observablehq/plot@0.6.17";
 
 /* ------------------------------------------------------------- constants */
 
-// The sequential ramp, light -> dark. Mirrors --seq-* in style.css.
-const RAMP = [
-  "#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5",
-  "#256abf", "#184f95", "#0d366b",
+/**
+ * The sequential ramp, read from CSS so it follows the active theme.
+ *
+ * Purple, because this is air quality and the AQI scale's upper categories are
+ * the colours people already recognise. It is deliberately a SINGLE-hue ramp
+ * and not the green-yellow-orange-red-purple AQI scale, because the calendar
+ * encodes a *probability*: painting a 25% chance maroon would say "hazardous"
+ * when it means "one year in four". The genuine AQI colours appear on the time
+ * series below, where the values really are AQI.
+ *
+ * Dark mode is stepped for the dark surface rather than flipped, so "more ink"
+ * keeps meaning "more risk" in both themes.
+ */
+function ramp() {
+  const cs = getComputedStyle(document.documentElement);
+  return [100, 200, 300, 400, 500, 600, 700]
+    .map((n) => cs.getPropertyValue(`--seq-${n}`).trim())
+    .filter(Boolean);
+}
+
+/**
+ * Official EPA / AirNow AQI category colours, verified against
+ * https://docs.airnowapi.org/aq101 -- these are the ones people know from
+ * PurpleAir and every air-quality map.
+ *
+ * `pm` is the 24-hour PM2.5 concentration breakpoint (current, post-2024-05-06
+ * scale, matching scripts/aqi.py); `aqi` is the index breakpoint. Which one we
+ * band by depends on what the y-axis is showing.
+ */
+const AQI_CATEGORIES = [
+  { name: "Good",                           color: "#00e400", aqi: 50,  pm: 9.0 },
+  { name: "Moderate",                       color: "#ffff00", aqi: 100, pm: 35.4 },
+  { name: "Unhealthy for Sensitive Groups", color: "#ff7e00", aqi: 150, pm: 55.4 },
+  { name: "Unhealthy",                      color: "#ff0000", aqi: 200, pm: 125.4 },
+  { name: "Very Unhealthy",                 color: "#8f3f97", aqi: 300, pm: 225.4 },
+  { name: "Hazardous",                      color: "#7e0023", aqi: 500, pm: 325.4 },
 ];
+
+// Bands sit behind the data and must stay recessive; the line is the subject.
+const BAND_OPACITY = 0.20;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -231,7 +266,7 @@ function renderCalendar() {
     color: {
       type: "linear",
       domain: [0, domainMax],
-      range: RAMP,
+      range: ramp(),
       interpolate: "rgb",
       clamp: true,
       legend: true,
@@ -447,7 +482,7 @@ function renderSmallMultiples() {
     color: {
       type: "linear",
       domain: [0, domainMax],
-      range: RAMP,
+      range: ramp(),
       interpolate: "rgb",
       clamp: true,
       legend: true,
@@ -530,6 +565,20 @@ async function renderTimeSeries() {
   }
 
   const yMax = Math.max(...data.map((d) => d.value));
+
+  // The recognisable green->maroon AQI bands, behind the data. Here the
+  // colours are doing the job they were designed for: labelling value ranges,
+  // not encoding a series. Banded on the concentration breakpoints when the
+  // axis is µg/m³ and on the index breakpoints when it is AQI.
+  const scaleKey = state.metric === "smoke" ? "pm" : "aqi";
+  const bands = [];
+  let lo = 0;
+  for (const c of AQI_CATEGORIES) {
+    const hi = c[scaleKey];
+    if (lo <= yMax) bands.push({ ...c, lo, hi: Math.min(hi, yMax * 1.05) });
+    lo = hi;
+    if (lo > yMax) break;
+  }
   const events = FIRE_EVENTS.map((e) => ({ ...e, d: new Date(`${e.date}T00:00:00Z`) }))
     .filter((e) => e.d >= data[0].date && e.d <= data[data.length - 1].date);
 
@@ -552,6 +601,14 @@ async function renderTimeSeries() {
       zero: true,
     },
     marks: [
+      Plot.rect(bands, {
+        y1: "lo",
+        y2: "hi",
+        fill: "color",
+        fillOpacity: BAND_OPACITY,
+        insetTop: 0,
+        insetBottom: 0,
+      }),
       Plot.ruleY([0], { stroke: t.baseline, strokeWidth: 1 }),
 
       // Fire-season markers, behind the data.
@@ -574,17 +631,23 @@ async function renderTimeSeries() {
         rotate: -90,
       }),
 
+      // Neutral ink, not the series purple. The bands behind now span green
+      // through maroon, and a coloured line loses itself against whichever
+      // band it happens to be crossing -- exactly at the spikes that matter.
+      // The bands carry the colour meaning; the line just has to be readable
+      // everywhere.
       Plot.areaY(data, {
         x: "date",
         y: "value",
-        fill: t.series,
-        fillOpacity: 0.16,
+        fill: t.text,
+        fillOpacity: 0.10,
         curve: "step",
       }),
       Plot.lineY(data, {
         x: "date",
         y: "value",
-        stroke: t.series,
+        stroke: t.text,
+        strokeOpacity: 0.85,
         strokeWidth: 1,
         curve: "step",
       }),
@@ -605,6 +668,17 @@ async function renderTimeSeries() {
   });
 
   el.replaceChildren(plot);
+
+  // The bands are only meaningful with their names attached -- a status colour
+  // never carries meaning alone.
+  const unit = state.metric === "smoke" ? " µg/m³" : "";
+  $("#aqi-legend").innerHTML =
+    `<span class="aqi-legend-label">Air quality bands:</span>` +
+    bands.map((b) =>
+      `<span class="aqi-chip"><i style="background:${b.color}"></i>` +
+      `${b.name} <span class="aqi-range">` +
+      `${b.lo === 0 ? "0" : b.lo}–${Math.round(b.hi)}${unit}</span></span>`
+    ).join("");
 
   const last = data[data.length - 1].date.toISOString().slice(0, 10);
   $("#ts-lede").textContent =
