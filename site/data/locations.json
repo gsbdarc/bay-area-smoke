@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-09-01T17:21:40+00:00",
+ "generated_utc": "2026-09-01T21:22:54+00:00",
  "start": "2000-01-01",
  "end": "2026-08-31",
  "thresholds": {
@@ -12,7 +12,8 @@
   "pm25": {
    "0": "no data",
    "1": "certified measurement",
-   "2": "provisional measurement"
+   "2": "provisional measurement (EPA AQS)",
+   "3": "provisional measurement (AirNow real-time feed)"
   },
   "smoke": {
    "0": "no data",
@@ -446,10 +447,10 @@
     }
    ],
    "pm25_first": "2000-01-01",
-   "pm25_last": "2024-12-31",
-   "pm25_days": 8242,
+   "pm25_last": "2026-08-31",
+   "pm25_days": 8815,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2024-12-31"
+   "smoke_last": "2026-08-31"
   },
   {
    "slug": "oakland",
@@ -475,10 +476,10 @@
     }
    ],
    "pm25_first": "2007-11-02",
-   "pm25_last": "2025-12-31",
-   "pm25_days": 6265,
+   "pm25_last": "2026-08-31",
+   "pm25_days": 6516,
    "smoke_first": "2006-01-01",
-   "smoke_last": "2025-12-31"
+   "smoke_last": "2026-08-31"
   },
   {
    "slug": "redwood-city",
@@ -498,10 +499,10 @@
     }
    ],
    "pm25_first": "2000-01-01",
-   "pm25_last": "2024-12-31",
-   "pm25_days": 7393,
+   "pm25_last": "2026-08-31",
+   "pm25_days": 7956,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2024-12-31"
+   "smoke_last": "2026-08-31"
   },
   {
    "slug": "san-jose",
@@ -521,10 +522,10 @@
     }
    ],
    "pm25_first": "2002-10-05",
-   "pm25_last": "2024-12-31",
-   "pm25_days": 7799,
+   "pm25_last": "2026-08-31",
+   "pm25_days": 8358,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2024-12-31"
+   "smoke_last": "2026-08-31"
   },
   {
    "slug": "livermore",
@@ -602,10 +603,10 @@
     }
    ],
    "pm25_first": "2014-01-09",
-   "pm25_last": "2024-12-31",
-   "pm25_days": 3857,
+   "pm25_last": "2026-08-31",
+   "pm25_days": 4429,
    "smoke_first": "2006-01-01",
-   "smoke_last": "2024-12-31"
+   "smoke_last": "2026-08-31"
   },
   {
    "slug": "santa-cruz",
@@ -625,10 +626,10 @@
     }
    ],
    "pm25_first": "2000-01-07",
-   "pm25_last": "2026-03-31",
-   "pm25_days": 6356,
+   "pm25_last": "2026-08-31",
+   "pm25_days": 6493,
    "smoke_first": "2005-08-08",
-   "smoke_last": "2026-03-31"
+   "smoke_last": "2026-08-31"
   }
  ],
  "crossval": {
