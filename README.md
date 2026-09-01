@@ -37,29 +37,36 @@ four rather than drawing one confident-looking line:
 | Layer | Range | Provenance |
 |---|---|---|
 | Total PM2.5 | 2000 – 2024 | EPA AirData bulk, agency-certified |
-| Total PM2.5 | 2025 – present | EPA AQS API, **provisional — and only Point Reyes and Santa Cruz** |
+| Total PM2.5 | 2025 – present | EPA AQS API, **provisional — and only some locations** (see below) |
 | Smoke PM2.5 | 2006 – 2023 | Stanford ECHOLab v2, published |
 | Smoke PM2.5 | 2024 – present | **Our extension** of their method, where a monitor still exists |
 
 Smoke attribution cannot start before **2005-08-05**, when NOAA's smoke-plume record
 begins.
 
-### The 2025 hole, stated plainly
+### The 2025 hole, and why it is a moving target
 
 The plan assumed the keyed AQS API would serve uncertified data and so cover
-2025 → present. **It does not.** BAAQMD has submitted no PM2.5 to AQS for 2025 or
-later at all — verified against a working key, where September 2024 returns 524
-rows for Alameda County and September 2025 returns none, via both the daily and
-raw-sample endpoints ([issue #7](https://github.com/gsbdarc/bay-area-smoke/issues/7)).
+2025 → present. For a long time it did not: on 2026-09-01, September 2024
+returned 524 rows for Alameda County and September 2025 returned **none**, via
+both the daily and raw-sample endpoints. BAAQMD simply had not submitted
+([issue #7](https://github.com/gsbdarc/bay-area-smoke/issues/7)).
 
-So for eight of the ten locations, **measured air quality ends 2024-12-31**. Only
-Point Reyes (a National Park Service site) and Santa Cruz (a different air
-district, which certifies faster) continue into 2025–26.
+Later the same day, Alameda started returning 2025 data. **BAAQMD's backfill is
+arriving piecemeal, site by site** — Oakland and Concord first, with San
+Francisco, Santa Clara, Sonoma and Napa still empty at the time of writing.
+Sites run by other agencies (Point Reyes, Santa Cruz) were never affected.
 
-This barely touches the headline view — the seasonal risk calendar rests on
-2006–2024, close to two decades — but it does mean the tail of the time series is
-short for most locations, and the site says so per location rather than trailing
-off without explanation.
+So the size of the hole is genuinely in flux, and any number written here goes
+stale. **The authoritative answer is the per-location coverage in
+`site/data/locations.json`**, regenerated on every build and shown in the site's
+methods table. The monthly refresh picks up new submissions automatically; no
+code change is needed when a county appears.
+
+None of this touches the headline view — the seasonal risk calendar rests on
+2006–2024, close to two decades. It only shortens the tail of the time series,
+and the site states the real end date per location rather than trailing off
+without explanation.
 
 ### Known gaps that are not zeros
 
