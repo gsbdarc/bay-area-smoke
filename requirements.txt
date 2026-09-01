@@ -5,4 +5,5 @@ requests==2.32.5
 pyshp==2.3.1          # shapefile reader -- pure Python, no GDAL
 shapely==2.1.2        # point-in-polygon for HMS smoke plumes
 pandera==0.26.1       # data validation on every pipeline stage
+pyarrow==21.0.0       # parquet engine for every data/processed/*.parquet
 pytest==8.4.2

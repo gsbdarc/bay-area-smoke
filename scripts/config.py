@@ -5,14 +5,53 @@ AirData files (not recalled from memory) on 2026-08-31. See PLAN.md.
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 # Relative paths only -- never absolute. See Gentzkow & Shapiro.
 ROOT = Path(__file__).resolve().parent.parent
-RAW = ROOT / "data" / "raw"
 PROCESSED = ROOT / "data" / "processed"
 SITE_DATA = ROOT / "site" / "data"
+
+
+def _default_raw_dir() -> Path:
+    """Where multi-GB raw downloads land.
+
+    Raw data is bulky, re-downloadable, and never edited in place, so it does
+    not belong in a backed-up home directory. Stanford's Yen cluster gives home
+    an 80 GiB soft quota and says plainly that it is for "small scripts and
+    utilities"; `/scratch/users/$USER` is the 100 TB, non-backed-up space meant
+    for exactly this. See https://rcpedia.stanford.edu/_user_guide/storage/
+
+    Resolution order:
+      1. `$BAS_RAW_DIR`            -- explicit override, always wins
+      2. `/scratch/users/$USER`    -- Yen (and any host with the same layout)
+      3. `$SCRATCH`                -- Sherlock and most other clusters
+      4. `<repo>/data/raw`         -- laptops, CI, anywhere without scratch
+
+    Scratch is purged after 90 days of no access. That is fine and deliberate:
+    everything downstream lives in `data/processed/`, which is committed, so a
+    purge costs a re-download and nothing else.
+    """
+    override = os.environ.get("BAS_RAW_DIR")
+    if override:
+        return Path(override).expanduser()
+
+    user = os.environ.get("USER") or os.environ.get("LOGNAME") or ""
+    if user:
+        yen_scratch = Path("/scratch/users") / user
+        if yen_scratch.is_dir():
+            return yen_scratch / "bay-area-smoke" / "raw"
+
+    env_scratch = os.environ.get("SCRATCH")
+    if env_scratch and Path(env_scratch).is_dir():
+        return Path(env_scratch) / "bay-area-smoke" / "raw"
+
+    return ROOT / "data" / "raw"
+
+
+RAW = _default_raw_dir()
 
 # EPA state code for California, and the ten counties we care about.
 STATE_CA = "06"
