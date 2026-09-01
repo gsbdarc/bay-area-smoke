@@ -1,0 +1,396 @@
+/* Bay Area Smoke Trends -- design tokens and layout.
+ *
+ * Colour roles come from the project's data-viz palette. Everything below is
+ * written against roles, never raw hex, so the light/dark values swap in one
+ * place. Dark values are declared under BOTH the media query (OS setting) and
+ * the [data-theme] scope (explicit toggle), so the toggle wins either way.
+ */
+
+:root {
+  color-scheme: light;
+
+  --surface-1:      #fcfcfb;   /* chart surface */
+  --plane:          #f9f9f7;   /* page behind the cards */
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --grid:           #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11, 11, 11, 0.10);
+
+  /* Sequential ramp -- one hue, light to dark. Used for every magnitude
+   * encoding on the page, so the calendar and the small multiples are
+   * directly comparable. */
+  --seq-100: #cde2fb;
+  --seq-200: #9ec5f4;
+  --seq-300: #6da7ec;
+  --seq-400: #3987e5;
+  --seq-500: #256abf;
+  --seq-600: #184f95;
+  --seq-700: #0d366b;
+
+  --series-1:  #2a78d6;
+  --accent:    #2a78d6;
+  --critical:  #d03b3b;
+  --no-data:   #e8e7e2;      /* legend swatch for "no data" */
+  --no-data-ink: #a9a7a0;    /* hatch stroke -- see addHatch() in app.js */
+
+  --radius: 10px;
+  --maxw: 1120px;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --plane:          #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255, 255, 255, 0.10);
+    --series-1:       #3987e5;
+    --accent:         #3987e5;
+    --no-data:        #2a2a28;
+    --no-data-ink:    #6e6c66;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --plane:          #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --grid:           #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255, 255, 255, 0.10);
+  --series-1:       #3987e5;
+  --accent:         #3987e5;
+  --no-data:        #2a2a28;
+  --no-data-ink:    #6e6c66;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--plane);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+/* ---------------------------------------------------------------- header */
+
+.page-head { padding: 48px 0 8px; }
+
+h1 {
+  font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+.standfirst {
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  color: var(--text-secondary);
+  max-width: 62ch;
+  margin: 0;
+}
+
+.standfirst em { color: var(--text-primary); font-style: italic; }
+
+/* -------------------------------------------------------------- controls */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 28px;
+  align-items: flex-end;
+  margin: 28px 0 4px;
+  padding: 16px 18px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.control { display: flex; flex-direction: column; gap: 6px; }
+
+.control label,
+.control-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+select {
+  font: inherit;
+  font-size: 1rem;
+  padding: 8px 12px;
+  min-height: 42px;          /* comfortable touch target */
+  border-radius: 8px;
+  border: 1px solid var(--baseline);
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+.segmented { display: flex; gap: 0; }
+
+.segmented button {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 9px 16px;
+  min-height: 42px;
+  border: 1px solid var(--baseline);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.segmented button:first-child { border-radius: 8px 0 0 8px; }
+.segmented button:last-child  { border-radius: 0 8px 8px 0; margin-left: -1px; }
+
+.segmented button.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.segmented button:focus-visible,
+select:focus-visible,
+.ghost:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.metric-note {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  min-width: 240px;
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 22px 26px;
+  margin: 22px 0;
+}
+
+h2 {
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+
+h3 {
+  font-size: 1.02rem;
+  margin: 26px 0 8px;
+}
+
+.lede {
+  color: var(--text-secondary);
+  max-width: 70ch;
+  margin: 0 0 18px;
+  font-size: 0.95rem;
+}
+
+.figure { margin: 0; }
+
+.caption {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  max-width: 78ch;
+}
+
+.viz-root { overflow-x: auto; }
+
+.viz-root figure { margin: 0; }
+
+/* --------------------------------------------------------- the day card */
+
+.daycard {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--plane);
+  font-size: 0.95rem;
+  min-height: 68px;
+}
+
+.daycard .dc-date {
+  font-weight: 700;
+  font-size: 1.05rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.daycard .dc-big {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.daycard .dc-muted { color: var(--text-secondary); }
+
+.daycard.is-empty { color: var(--text-muted); }
+
+/* ----------------------------------------------------------- table view */
+
+.table-toggle { margin-top: 18px; }
+
+.table-toggle summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.table-scroll { overflow-x: auto; margin-top: 12px; }
+
+table { border-collapse: collapse; font-size: 0.85rem; width: 100%; }
+
+th, td {
+  text-align: right;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--grid);
+  font-variant-numeric: tabular-nums;
+}
+
+th:first-child, td:first-child { text-align: left; font-variant-numeric: normal; }
+
+thead th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ------------------------------------------------------------- coverage */
+
+.coverage {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  font-size: 0.8rem;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--plane);
+  color: var(--text-secondary);
+}
+
+.chip strong { color: var(--text-primary); font-weight: 600; }
+
+.chip.warn {
+  border-color: var(--critical);
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------- prose */
+
+.prose { max-width: none; }
+.prose p, .prose li { max-width: 74ch; color: var(--text-secondary); }
+.prose li { margin-bottom: 8px; }
+.prose strong { color: var(--text-primary); }
+.prose a { color: var(--accent); }
+.prose code {
+  font-size: 0.9em;
+  background: var(--plane);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.crossval {
+  padding: 12px 14px;
+  background: var(--plane);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
+.generated { font-size: 0.82rem; color: var(--text-muted); }
+
+/* --------------------------------------------------------------- footer */
+
+.page-foot {
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+  padding: 22px 0 48px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.page-foot .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-foot p { margin: 0; max-width: 70ch; }
+
+.ghost {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 7px 14px;
+  min-height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--baseline);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- plots */
+
+/* Observable Plot injects its own swatches; keep them on our type tokens. */
+.viz-root figure > div {
+  font-family: var(--font) !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.82rem !important;
+}
+
+.loading { color: var(--text-muted); padding: 40px 0; font-size: 0.9rem; }
+
+.error {
+  color: var(--critical);
+  padding: 16px;
+  border: 1px solid var(--critical);
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .controls { position: static; }
+  .panel { padding: 18px 14px 20px; }
+  .wrap { padding: 0 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

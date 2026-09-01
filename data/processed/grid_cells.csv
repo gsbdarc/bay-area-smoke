@@ -1,0 +1,11 @@
+slug,grid_id_10km,cell_lon,cell_lat,match
+point-reyes,161728,-122.877019,38.134477,contains
+half-moon-bay,156061,-122.394017,37.458352,contains
+san-francisco,157609,-122.358239,37.752053,contains
+oakland,157096,-122.166787,37.786822,contains
+redwood-city,155548,-122.203777,37.492627,contains
+san-jose,153489,-121.916204,37.320079,contains
+livermore,155038,-121.808295,37.658282,contains
+napa,160190,-122.231921,38.288438,contains
+sebastopol,163276,-122.846873,38.42917,contains
+santa-cruz,151940,-122.023969,36.983363,contains

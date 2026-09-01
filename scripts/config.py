@@ -5,14 +5,53 @@ AirData files (not recalled from memory) on 2026-08-31. See PLAN.md.
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 # Relative paths only -- never absolute. See Gentzkow & Shapiro.
 ROOT = Path(__file__).resolve().parent.parent
-RAW = ROOT / "data" / "raw"
 PROCESSED = ROOT / "data" / "processed"
 SITE_DATA = ROOT / "site" / "data"
+
+
+def _default_raw_dir() -> Path:
+    """Where multi-GB raw downloads land.
+
+    Raw data is bulky, re-downloadable, and never edited in place, so it does
+    not belong in a backed-up home directory. Stanford's Yen cluster gives home
+    an 80 GiB soft quota and says plainly that it is for "small scripts and
+    utilities"; `/scratch/users/$USER` is the 100 TB, non-backed-up space meant
+    for exactly this. See https://rcpedia.stanford.edu/_user_guide/storage/
+
+    Resolution order:
+      1. `$BAS_RAW_DIR`            -- explicit override, always wins
+      2. `/scratch/users/$USER`    -- Yen (and any host with the same layout)
+      3. `$SCRATCH`                -- Sherlock and most other clusters
+      4. `<repo>/data/raw`         -- laptops, CI, anywhere without scratch
+
+    Scratch is purged after 90 days of no access. That is fine and deliberate:
+    everything downstream lives in `data/processed/`, which is committed, so a
+    purge costs a re-download and nothing else.
+    """
+    override = os.environ.get("BAS_RAW_DIR")
+    if override:
+        return Path(override).expanduser()
+
+    user = os.environ.get("USER") or os.environ.get("LOGNAME") or ""
+    if user:
+        yen_scratch = Path("/scratch/users") / user
+        if yen_scratch.is_dir():
+            return yen_scratch / "bay-area-smoke" / "raw"
+
+    env_scratch = os.environ.get("SCRATCH")
+    if env_scratch and Path(env_scratch).is_dir():
+        return Path(env_scratch) / "bay-area-smoke" / "raw"
+
+    return ROOT / "data" / "raw"
+
+
+RAW = _default_raw_dir()
 
 # EPA state code for California, and the ten counties we care about.
 STATE_CA = "06"
@@ -147,15 +186,19 @@ LOCATIONS: tuple[Location, ...] = (
         blurb="Inland East Bay. Hot, and smoke settles in.",
         monitors=(
             # Site replacement, not a data gap. Stitch or the line breaks.
+            # Boundaries set from the live files: 06-001-0007's last reported
+            # day is 2024-01-31. 06-001-0016 actually starts reporting in
+            # 2023, but we hold it back to the handover so exactly one
+            # instrument feeds the series at any moment.
             Monitor("06-001-0007", 37.687526, -121.784217, "Livermore",
-                    end="2024-02-04"),
+                    end="2024-01-31"),
             Monitor("06-001-0016", 37.689750, -121.771550, "Livermore Portola",
-                    start="2024-02-05"),
+                    start="2024-02-01"),
         ),
         coverage_note=(
-            "Monitor 06-001-0007 was retired on 2024-02-04 and replaced by "
-            "06-001-0016 (Livermore Portola) 1.2 km away. The two are stitched "
-            "into one series."
+            "Monitor 06-001-0007 was retired at the end of January 2024 and "
+            "replaced by 06-001-0016 (Livermore Portola) 1.2 km away. The two "
+            "are stitched into one series."
         ),
     ),
     Location(
@@ -165,13 +208,23 @@ LOCATIONS: tuple[Location, ...] = (
         lon=-122.275024,
         blurb="Wine country. Where the outdoor weddings are.",
         monitors=(
+            # Two sites, a clean handover, and no gap: 06-055-0003 reports
+            # through 2018-03-31 and 06-055-0004 starts the very next day.
+            # 06-055-0003 was missing from the original plan, which cost Napa
+            # eleven years of measurement -- including the 2017 Tubbs/Atlas
+            # fires, where it recorded 170.6 and 199.1 ug/m3. Napa is the
+            # location this whole site exists for, so this matters.
+            Monitor("06-055-0003", 38.310942, -122.296189, "Napa",
+                    end="2018-03-31"),
             Monitor("06-055-0004", 38.278849, -122.275024, "Napa Valley College",
-                    start="2018-01-01", end="2021-05-20"),
+                    start="2018-04-01", end="2021-05-20"),
         ),
         coverage_note=(
-            "Napa County has had NO EPA PM2.5 monitor since 2021-05-20. Only "
-            "2018-2021 is measured; everything else is the modeled grid. Absence "
-            "of a monitor is not absence of smoke."
+            "Napa is measured from 2007 to 2021-05-19 by two monitors 4 km "
+            "apart (06-055-0003, then 06-055-0004), stitched into one series. "
+            "Napa County has had NO EPA PM2.5 monitor since. Before 2007 and "
+            "after 2021 the smoke line is the modeled grid, and total PM2.5 "
+            "is simply absent. Absence of a monitor is not absence of smoke."
         ),
     ),
     Location(

@@ -134,3 +134,40 @@ def test_missing_pm25_on_a_smoke_day_is_nan_not_zero():
 def test_rejects_missing_columns():
     with pytest.raises(ValueError, match="missing columns"):
         nonsmoke_background(pd.DataFrame({"location": [], "date": []}))
+
+
+def test_no_measurement_still_yields_zero_smoke_on_clear_days():
+    """Document the raw method's behaviour, which s04 then has to correct.
+
+    `attribute_smoke` sets smoke to exactly 0 whenever no plume was overhead,
+    even with no PM2.5 at all. That is right for a station that is measuring --
+    no plume means no wildfire PM2.5 regardless of concentration -- and it is
+    what the reference implementation does.
+
+    It is *wrong* for a location with no instrument, where it manufactures
+    confident zeros from nothing. s04 masks those; this test pins the
+    underlying behaviour so that if it ever changes, the mask gets revisited
+    rather than silently becoming a no-op.
+    """
+    d = _september(2018, 20.0, n=12)
+    blind = _september(2018, 20.0, n=2, plume=0)
+    blind["date"] = pd.to_datetime(["2018-09-28", "2018-09-29"])
+    blind["pm25"] = np.nan
+
+    out = attribute_smoke(pd.concat([d, blind], ignore_index=True))
+    got = out.set_index("date")["smoke_pm"]
+    assert got["2018-09-28"] == 0.0
+    assert got["2018-09-29"] == 0.0
+
+
+def test_unmeasured_smoke_day_is_nan_so_gaps_cannot_read_as_clean():
+    """The other half of the same story: a plume overhead with no measurement
+    is unknown, never zero. Together with the s04 mask this is what stops a
+    monitor outage from diluting a location's climatology with clean years."""
+    d = _september(2018, 20.0, n=12)
+    blind = _september(2018, 20.0, n=1, plume=1)
+    blind["date"] = pd.to_datetime(["2018-09-30"])
+    blind["pm25"] = np.nan
+
+    out = attribute_smoke(pd.concat([d, blind], ignore_index=True))
+    assert np.isnan(out.set_index("date")["smoke_pm"]["2018-09-30"])

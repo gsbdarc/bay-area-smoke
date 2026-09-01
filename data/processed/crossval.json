@@ -1,0 +1,62 @@
+{
+  "n_overlap_days": 46122,
+  "by_location": {
+    "livermore": {
+      "n": 6339,
+      "r": 0.9919,
+      "mean_published": 0.821,
+      "mean_ours": 0.78
+    },
+    "napa": {
+      "n": 4940,
+      "r": 0.978,
+      "mean_published": 0.979,
+      "mean_ours": 0.893
+    },
+    "oakland": {
+      "n": 5501,
+      "r": 0.9933,
+      "mean_published": 0.747,
+      "mean_ours": 0.753
+    },
+    "point-reyes": {
+      "n": 1977,
+      "r": 0.9507,
+      "mean_published": 0.463,
+      "mean_ours": 0.473
+    },
+    "redwood-city": {
+      "n": 6015,
+      "r": 0.99,
+      "mean_published": 0.626,
+      "mean_ours": 0.63
+    },
+    "san-francisco": {
+      "n": 6344,
+      "r": 0.9904,
+      "mean_published": 0.635,
+      "mean_ours": 0.641
+    },
+    "san-jose": {
+      "n": 6359,
+      "r": 0.9873,
+      "mean_published": 0.721,
+      "mean_ours": 0.644
+    },
+    "santa-cruz": {
+      "n": 5153,
+      "r": 0.9736,
+      "mean_published": 0.428,
+      "mean_ours": 0.465
+    },
+    "sebastopol": {
+      "n": 3494,
+      "r": 0.9886,
+      "mean_published": 1.056,
+      "mean_ours": 1.064
+    }
+  },
+  "pearson_r_all": 0.9853,
+  "mean_published": 0.723,
+  "mean_ours": 0.705
+}
