@@ -66,28 +66,41 @@ XVAL_OUT = PROCESSED / "crossval.json"
 
 BULK = PROCESSED / "epa_daily_bulk.parquet"
 API = PROCESSED / "epa_daily_api.parquet"
+AIRNOW = PROCESSED / "airnow_daily.parquet"
 HMS = PROCESSED / "smoke_days.parquet"
 ECHOLAB = PROCESSED / "echolab_smokepm.parquet"
 
 
+# Lower wins when the same site-day appears in more than one feed. All three
+# are the same instruments; they differ in how much QA has been applied and
+# therefore in how much we trust them, not in what they measured.
+SOURCE_RANK = {
+    "certified": 0,           # EPA bulk AirData, agency-certified
+    "provisional": 1,         # EPA AQS API, submitted but uncertified
+    "provisional-airnow": 2,  # AirNow real-time feed, least processed
+}
+
+
 def load_measurements() -> pd.DataFrame:
-    """Bulk + API site-days, deduped with certified data winning."""
+    """Bulk + AQS API + AirNow site-days, deduped with the best source winning."""
     frames = []
     if BULK.exists():
         frames.append(pd.read_parquet(BULK))
     else:
         raise SystemExit("s04: epa_daily_bulk.parquet missing -- run s01 first.")
-    if API.exists():
-        api = pd.read_parquet(API)
-        if len(api):
-            frames.append(api)
+
+    for path in (API, AIRNOW):
+        if path.exists():
+            extra = pd.read_parquet(path)
+            if len(extra):
+                frames.append(extra)
 
     cols = ["site_id", "date", "pm25", "provenance"]
     d = pd.concat([f[cols] for f in frames], ignore_index=True)
 
-    # A site-day present in both the certified bulk file and the provisional
-    # API feed should read as certified.
-    d["rank"] = (d["provenance"] != "certified").astype(int)
+    # AirNow only ever fills a hole. Where a site-day also exists in the
+    # certified bulk file or the AQS API, the better-processed value wins.
+    d["rank"] = d["provenance"].map(SOURCE_RANK).fillna(9)
     d = (
         d.sort_values(["site_id", "date", "rank"])
         .drop_duplicates(subset=["site_id", "date"], keep="first")
@@ -125,14 +138,16 @@ def collapse_to_location(mapped: pd.DataFrame) -> pd.DataFrame:
         pm25=("pm25", "mean"),
         n_monitors=("site_id", "nunique"),
     ).reset_index()
-    # If any contributing row was certified, call the day certified.
-    prov = (
-        mapped.assign(cert=mapped["provenance"] == "certified")
-        .groupby(["location", "date"])["cert"].any()
-        .map({True: "certified", False: "provisional"})
-        .rename("pm25_source")
-        .reset_index()
+    # Keep the BEST source contributing to the day, not just certified-or-not,
+    # so the UI can distinguish an AirNow fill from an AQS submission.
+    best = (
+        mapped.assign(rank=mapped["provenance"].map(SOURCE_RANK).fillna(9))
+        .groupby(["location", "date"])["rank"].min()
+        .rename("rank").reset_index()
     )
+    inv = {v: k for k, v in SOURCE_RANK.items()}
+    best["pm25_source"] = best["rank"].map(inv).fillna("provisional")
+    prov = best.drop(columns=["rank"])
     return out.merge(prov, on=["location", "date"], how="left")
 
 

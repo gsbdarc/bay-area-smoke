@@ -63,11 +63,13 @@ MIN_WINDOW_COVERAGE = 0.6  # a year must have this share of window days to count
 
 # Compact provenance codes; the legend travels with locations.json so the
 # browser never has to hard-code these.
-PM25_SOURCE_CODES = {"none": 0, "certified": 1, "provisional": 2}
+PM25_SOURCE_CODES = {"none": 0, "certified": 1, "provisional": 2,
+                     "provisional-airnow": 3}
 SMOKE_SOURCE_CODES = {"none": 0, "echolab-v1": 1, "echolab-v2": 1, "ours": 2}
 SOURCE_LEGEND = {
     "pm25": {"0": "no data", "1": "certified measurement",
-             "2": "provisional measurement"},
+             "2": "provisional measurement (EPA AQS)",
+             "3": "provisional measurement (AirNow real-time feed)"},
     "smoke": {"0": "no data", "1": "published model (ECHOLab)",
               "2": "our extension of their method"},
 }
