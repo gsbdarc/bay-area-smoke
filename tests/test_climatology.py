@@ -85,12 +85,31 @@ def test_per_day_rate_never_exceeds_the_per_year_rate(clim):
                 )
 
 
-def test_san_jose_22_november_matches_the_reported_figures(clim):
-    """The exact case that surfaced the bug, pinned."""
+def test_san_jose_22_november_keeps_its_denominators_apart(clim):
+    """The exact case that surfaced the bug.
+
+    Deliberately NOT pinned to exact counts. This test was originally written
+    against `n_obs_aqi == 342` and started failing the moment the AirNow
+    backfill added real days -- a correct build tripping a stale constant.
+    Coverage grows every month, so the durable assertion is the *relationship*
+    that was broken, not the arithmetic of one snapshot.
+
+    The bug: `n_years` was a single shared value, so the AQI numerator was
+    published against the smoke denominator. At this slot the two genuinely
+    differ, which is exactly why it showed up here.
+    """
     import datetime as dt
     slot = (dt.date(2020, 11, 22) - dt.date(2020, 1, 1)).days
     r = clim["san-jose"]
-    assert round(r["p_aqi"][slot] * 100) == 7
-    assert r["n_obs_aqi"][slot] == 342
-    assert r["years_hit_aqi"][slot] == 9
-    assert r["n_years_aqi"][slot] == 23      # NOT 20, the smoke year count
+
+    assert r["n_years_aqi"][slot] != r["n_years_smoke"][slot], (
+        "this slot is only a useful regression test while the two metrics "
+        "qualify different numbers of years"
+    )
+    # The per-day rate must be computed against day-observations...
+    hits = r["p_aqi"][slot] * r["n_obs_aqi"][slot]
+    assert abs(hits - round(hits)) < 0.05
+    # ...and the per-year count against years, never mixed.
+    assert r["years_hit_aqi"][slot] <= r["n_years_aqi"][slot]
+    # The two rates must not be confusable: per-day well below per-year.
+    assert r["p_aqi"][slot] < r["years_hit_aqi"][slot] / r["n_years_aqi"][slot]

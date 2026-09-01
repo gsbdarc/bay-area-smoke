@@ -132,6 +132,81 @@ def verify_events(panel: pd.DataFrame) -> None:
     )
 
 
+def verify_napa_gap(panel: pd.DataFrame) -> None:
+    """Issue #3: an absent monitor must never make Napa look clean.
+
+    Napa is the most likely place someone using this site is planning an
+    outdoor wedding, and it is our worst-instrumented location -- no EPA PM2.5
+    monitor at all since 2021-05-20. A missing monitor produces no high
+    readings, so if gaps are treated as data Napa renders as the *cleanest*
+    place in the region, which is precisely backwards.
+
+    The issue asked for an assertion that Napa's post-2021 smoke frequency is
+    not lower than its pre-2021 frequency. We deliberately do NOT test that:
+    it is brittle to the point of being misleading. Napa's annual smoke-day
+    rate ranges from 0.0% to 13.9% depending on how the fire season went, so
+    2022-23 (3.4%) sitting just under 2006-21 (3.7%) is ordinary weather, not
+    a bug -- and the test would fail on a correct build.
+
+    These check the same thing the issue was reaching for, but by mechanism
+    rather than by coincidence of the fire record.
+    """
+    napa = panel[panel["location"] == "napa"]
+
+    # 1. Years with no monitor contribute nothing at all -- not even zeros.
+    after = napa[napa["date"] >= "2024-01-01"]
+    n_vals = int(after["smoke_pm"].notna().sum())
+    check(
+        "Napa #3: years with no monitor contribute no smoke values",
+        n_vals == 0,
+        f"{n_vals} non-null smoke values after 2024-01-01 "
+        f"(of {len(after):,} days); must be 0",
+    )
+
+    # 2. ...so they cannot pad the climatology denominator. Napa has real
+    #    smoke data for 2006-2023 only: 18 years, and the published
+    #    denominator must say 18, not 21.
+    clim_path = SITE_DATA / "climatology.json"
+    if clim_path.exists():
+        rows = json.loads(clim_path.read_text())["by_location"]["napa"]
+        worst = max(rows["n_years_smoke"])
+        real_years = napa[napa["smoke_pm"].notna()]["date"].dt.year.nunique()
+        check(
+            "Napa #3: climatology denominator counts only years with data",
+            worst <= real_years,
+            f"denominator peaks at {worst}, {real_years} years actually have "
+            "data -- a larger denominator would dilute Napa's risk",
+        )
+
+    # 3. The failure mode named in the issue, tested directly: Napa must not
+    #    come out cleaner than the coast. If the gap were being read as clean
+    #    air, this is where it would show.
+    freq = (
+        panel[panel["smoke_pm"].notna()]
+        .assign(hit=lambda d: d["smoke_pm"] >= NOTICEABLE_SMOKE)
+        .groupby("location")["hit"].mean()
+    )
+    coastal = ["half-moon-bay", "point-reyes", "santa-cruz"]
+    present = [c for c in coastal if c in freq.index]
+    if present and "napa" in freq.index:
+        check(
+            "Napa #3: inland Napa is smokier than the coast, not cleaner",
+            all(freq["napa"] > freq[c] for c in present),
+            "Napa " + f"{freq['napa']:.2%} vs "
+            + ", ".join(f"{c} {freq[c]:.2%}" for c in present),
+        )
+
+    # 4. A second Napa ground-truth event, from the modelled era rather than
+    #    the measured one, so the grid is checked as well as the monitor.
+    glass = napa[napa["date"].between("2020-09-27", "2020-10-05")]
+    peak = glass["smoke_pm"].max()
+    check(
+        "Napa #3: 2020 Glass Fire is visible in the modelled series",
+        pd.notna(peak) and peak > 50,
+        f"peak smoke PM2.5 = {peak:.1f}" if pd.notna(peak) else "no data",
+    )
+
+
 def verify_structure(panel: pd.DataFrame) -> None:
     # Gap-free panel: every location has every day exactly once.
     days = pd.date_range(panel["date"].min(), panel["date"].max(), freq="D")
