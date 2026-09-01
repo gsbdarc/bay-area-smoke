@@ -1,0 +1,8 @@
+# Pinned for reproducibility. Python >= 3.11.
+pandas==2.3.3
+numpy==2.3.4
+requests==2.32.5
+pyshp==2.3.1          # shapefile reader -- pure Python, no GDAL
+shapely==2.1.2        # point-in-polygon for HMS smoke plumes
+pandera==0.26.1       # data validation on every pipeline stage
+pytest==8.4.2

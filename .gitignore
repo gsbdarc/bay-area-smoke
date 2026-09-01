@@ -1,0 +1,32 @@
+# ---- Raw data: never committed, never edited in place ----
+data/raw/
+
+# ---- Secrets ----
+.env
+*.env
+!.env.example
+
+# ---- Python (github/gitignore Python.gitignore, trimmed) ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Notebooks ----
+.ipynb_checkpoints/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db

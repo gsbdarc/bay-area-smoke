@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it as below, and cite the upstream data sources listed in LICENSE-data."
+title: "Bay Area Smoke Trends"
+abstract: >-
+  A public, reproducible visualization of wildfire smoke and PM2.5 in the
+  California Bay Area over time, designed to answer the practical question of
+  how likely smoke is on a given calendar date at a given location -- for
+  planning outdoor events.
+type: software
+authors:
+  - family-names: Storer
+    given-names: Alex
+    affiliation: "Stanford Graduate School of Business"
+    email: astorer@stanford.edu
+repository-code: "https://github.com/gsbdarc/bay-area-smoke"
+license: MIT
+license-url: "https://github.com/gsbdarc/bay-area-smoke/blob/main/LICENSE-data"
+keywords:
+  - wildfire smoke
+  - air quality
+  - PM2.5
+  - California
+  - data visualization

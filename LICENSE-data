@@ -1,0 +1,34 @@
+# Data license
+
+The CODE in this repository is MIT licensed (see LICENSE).
+
+The DATA in this repository -- everything under `data/processed/` and
+`site/data/` -- is licensed
+**Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**.
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+## Why ShareAlike, specifically
+
+This is not a free choice. Our derived smoke-PM2.5 extracts are based on the
+Stanford ECHOLab daily 10 km smoke PM2.5 dataset, which is published on Harvard
+Dataverse under CC BY-SA 4.0. ShareAlike propagates to derivative datasets, so
+any redistribution of our processed data must carry the same license and
+attribution.
+
+## Upstream sources and their terms
+
+- **Stanford ECHOLab daily 10 km smoke PM2.5** -- CC BY-SA 4.0.
+  Childs, M.L., Li, J., Wen, J., Heft-Neal, S., Driscoll, A., Wang, S.,
+  Gould, C.F., Qiu, M., Burney, J., Burke, M. (2022). "Daily Local-Level
+  Estimates of Ambient Wildfire Smoke PM2.5 for the Contiguous US."
+  Environmental Science & Technology 56(19):13607-13621.
+  https://doi.org/10.1021/acs.est.2c02934
+  Dataset: https://doi.org/10.7910/DVN/DJVMTV
+
+- **US EPA Air Quality System (AQS) / AirData** -- US Government work, public
+  domain. https://aqs.epa.gov/aqsweb/airdata/download_files.html
+
+- **NOAA Hazard Mapping System (HMS) smoke polygons** -- US Government work,
+  public domain. https://www.ospo.noaa.gov/products/land/hms.html
+
+Neither EPA nor NOAA nor Stanford ECHOLab endorses this project.
