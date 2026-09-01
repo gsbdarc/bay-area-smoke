@@ -10,8 +10,9 @@ locations, the historical probability of a smoky day on each calendar date.
 
 Live site: https://gsbdarc.github.io/bay-area-smoke/
 
-> **Status: under construction.** The scaffolding and plan are in place; the data
-> pipeline runs next. See [`PLAN.md`](PLAN.md) for the full design.
+> **Status: pipeline built and run.** All stages produce data and the site renders
+> from it. See [`PLAN.md`](PLAN.md) for the original design and the notes below for
+> where reality differed from it.
 
 ## What it shows
 
@@ -35,13 +36,30 @@ four rather than drawing one confident-looking line:
 
 | Layer | Range | Provenance |
 |---|---|---|
-| Total PM2.5 | 2000 – 2024 | EPA AirData, agency-certified |
-| Total PM2.5 | 2025 – present | EPA AQS API, **provisional / uncertified** |
-| Smoke PM2.5 | 2006 – 2023 | Stanford ECHOLab, published |
-| Smoke PM2.5 | 2024 – present | **Our extension** of their method |
+| Total PM2.5 | 2000 – 2024 | EPA AirData bulk, agency-certified |
+| Total PM2.5 | 2025 – present | EPA AQS API, **provisional — and only Point Reyes and Santa Cruz** |
+| Smoke PM2.5 | 2006 – 2023 | Stanford ECHOLab v2, published |
+| Smoke PM2.5 | 2024 – present | **Our extension** of their method, where a monitor still exists |
 
 Smoke attribution cannot start before **2005-08-05**, when NOAA's smoke-plume record
 begins.
+
+### The 2025 hole, stated plainly
+
+The plan assumed the keyed AQS API would serve uncertified data and so cover
+2025 → present. **It does not.** BAAQMD has submitted no PM2.5 to AQS for 2025 or
+later at all — verified against a working key, where September 2024 returns 524
+rows for Alameda County and September 2025 returns none, via both the daily and
+raw-sample endpoints ([issue #7](https://github.com/gsbdarc/bay-area-smoke/issues/7)).
+
+So for eight of the ten locations, **measured air quality ends 2024-12-31**. Only
+Point Reyes (a National Park Service site) and Santa Cruz (a different air
+district, which certifies faster) continue into 2025–26.
+
+This barely touches the headline view — the seasonal risk calendar rests on
+2006–2024, close to two decades — but it does mean the tail of the time series is
+short for most locations, and the site says so per location rather than trailing
+off without explanation.
 
 ### Known gaps that are not zeros
 
@@ -90,16 +108,33 @@ the pipeline respects both.
 
 | Script | Produces |
 |---|---|
-| `scripts/bootstrap/b01_fetch_echolab.py` | `data/raw/echolab/` (~1.8 GB, one time) |
-| `scripts/bootstrap/b02_pick_grid_cells.py` | `data/processed/grid_cells.csv` |
-| `scripts/s01_fetch_epa_bulk.py` | `data/processed/epa_daily_bulk.parquet` (2000–2024) |
-| `scripts/s02_fetch_epa_api.py` | `data/processed/epa_daily_api.parquet` (2025→) |
+| `scripts/bootstrap/b01_fetch_echolab.py` | raw ECHOLab v2 + 10 km grid (**~8.6 GB**, one time) |
+| `scripts/bootstrap/b02_pick_grid_cells.py` | `data/processed/grid_cells.csv`, `echolab_smokepm.parquet` |
+| `scripts/s01_fetch_epa_bulk.py` | `data/processed/epa_daily_bulk.parquet` (2000–2024 certified) |
+| `scripts/s02_fetch_epa_api.py` | `data/processed/epa_daily_api.parquet` (2025→, provisional) |
 | `scripts/s03_fetch_hms.py` | `data/processed/smoke_days.parquet` |
-| `scripts/s04_build_smoke.py` | `data/processed/daily_panel.parquet` |
+| `scripts/s04_build_smoke.py` | `data/processed/daily_panel.parquet`, `crossval.json` |
 | `scripts/s05_build_site_data.py` | `site/data/*.json` → the charts |
+| `scripts/verify.py` | ground-truth report (`run_all.py --verify`) |
 
-Raw downloads land in `data/raw/`, which is gitignored and **never edited in place**.
-Everything computed goes to `data/processed/`.
+Shared helpers: `scripts/fetch.py` (cached atomic downloads), `scripts/config.py`
+(locations and monitors), `scripts/aqi.py`, `scripts/smoke.py`.
+
+**Raw downloads do not live in the repo.** They go to `/scratch/users/$USER` on the
+Yens, `$SCRATCH` elsewhere, or `$BAS_RAW_DIR` if you set it — falling back to
+`data/raw/` only when no scratch space exists. Stanford's guidance is explicit that
+home directories (80 GiB soft quota) are for "small scripts and utilities", not
+multi-gigabyte datasets; see
+[RCpedia storage](https://rcpedia.stanford.edu/_user_guide/storage/). Raw data is
+**never edited in place**, and everything computed goes to `data/processed/`, which
+*is* committed — that is what lets the monthly refresh run without ever
+re-downloading 8.6 GB.
+
+The ECHOLab v2 download is 8.6 GB rather than the 1.8 GB the plan estimated: it is a
+shared Dropbox *folder* with no per-file URL, so `&dl=1` brings the county, tract and
+ZCTA aggregations along with the 10 km grid we actually use. It buys three more years
+of published smoke (through 2023) than the Dataverse v1 fallback, which is why we
+take it.
 
 ## Caveats worth reading before you trust a number
 
