@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bay Area Smoke Trends — how likely is smoke on your date?</title>
+<meta name="description" content="Historical probability of wildfire smoke on each calendar date at ten Bay Area locations, from two decades of EPA monitoring and NOAA smoke-plume data.">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+
+<header class="page-head">
+  <div class="wrap">
+    <h1>Bay Area Smoke Trends</h1>
+    <p class="standfirst">
+      If you are booking a wedding, a conference, or anything else outdoors months
+      or years out, the question you actually need answered is
+      <em>how likely is smoke on that date, in that place?</em>
+      This is two decades of public air-quality and satellite data, arranged to
+      answer exactly that.
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ------------------------------------------------ controls -->
+  <section class="controls" aria-label="Chart controls">
+    <div class="control">
+      <label for="location">Location</label>
+      <select id="location"></select>
+    </div>
+
+    <div class="control">
+      <span class="control-label" id="metric-label">Metric</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="metric-label">
+        <button type="button" role="radio" data-metric="smoke" aria-checked="true" class="is-on">
+          Wildfire smoke
+        </button>
+        <button type="button" role="radio" data-metric="aqi" aria-checked="false">
+          Total air quality
+        </button>
+      </div>
+    </div>
+
+    <p class="metric-note" id="metric-note"></p>
+  </section>
+
+  <!-- ------------------------------------------------ headline calendar -->
+  <section class="panel" aria-labelledby="cal-h">
+    <h2 id="cal-h">Seasonal risk calendar</h2>
+    <p class="lede" id="cal-lede"></p>
+
+    <figure class="figure">
+      <div id="calendar" class="viz-root"></div>
+      <figcaption id="cal-caption" class="caption"></figcaption>
+    </figure>
+
+    <div id="daycard" class="daycard" role="status" aria-live="polite"></div>
+
+    <details class="table-toggle">
+      <summary>Show these numbers as a table</summary>
+      <div id="cal-table" class="table-scroll"></div>
+    </details>
+  </section>
+
+  <!-- ------------------------------------------------ small multiples -->
+  <section class="panel" aria-labelledby="sm-h">
+    <h2 id="sm-h">All ten locations at once</h2>
+    <p class="lede">
+      The same calendar for every location, on one shared scale. The coast and
+      the inland valleys are not the same place, and this is the clearest way to
+      see it — read down a column to compare places on one date.
+    </p>
+    <figure class="figure">
+      <div id="smallmult" class="viz-root"></div>
+      <figcaption id="sm-caption" class="caption"></figcaption>
+    </figure>
+  </section>
+
+  <!-- ------------------------------------------------ time series -->
+  <section class="panel" aria-labelledby="ts-h">
+    <h2 id="ts-h">The whole record</h2>
+    <p class="lede" id="ts-lede"></p>
+    <figure class="figure">
+      <div id="timeseries" class="viz-root"></div>
+      <figcaption id="ts-caption" class="caption"></figcaption>
+    </figure>
+    <div id="coverage" class="coverage"></div>
+  </section>
+
+  <!-- ------------------------------------------------ methods -->
+  <section class="panel prose" aria-labelledby="methods-h">
+    <h2 id="methods-h">Methods &amp; caveats</h2>
+
+    <h3>Read this before you trust a number</h3>
+    <ul>
+      <li>
+        <strong>A plume overhead is not smoke in your lungs.</strong> NOAA's
+        satellite analysts draw a plume as seen from above — a vertical column.
+        The clearest illustration is 9 September 2020, San Francisco's orange-sky
+        day: unforgettable overhead, but comparatively modest
+        <em>ground-level</em> PM2.5. Smoke is only ever attributed here when a
+        plume overhead coincides with a measured surface anomaly.
+      </li>
+      <li>
+        <strong>Smoke PM2.5 is an attribution, not a measurement.</strong> It is
+        the PM2.5 above a local, seasonal, non-smoke baseline on days a plume was
+        overhead. It absorbs any other anomaly that happened to coincide, and it
+        reports exactly zero when the satellite saw no plume — even if smoke was
+        in fact present.
+      </li>
+      <li>
+        <strong>Past frequency is not a forecast.</strong> A 35% historical rate
+        on 14 September is a base rate from around twenty observations, not a
+        probability for next year. Fire regimes are changing faster than the
+        record can track.
+      </li>
+      <li>
+        <strong>Missing data is not clean air.</strong> A year only counts toward
+        a location's statistic if that location actually had working
+        instrumentation that year. Without that rule Napa — which lost its
+        monitor in 2021 — would look like the safest place in the region.
+      </li>
+    </ul>
+
+    <h3>Where the numbers come from</h3>
+    <div id="provenance-table"></div>
+
+    <h3>How smoke is attributed</h3>
+    <p>
+      For the years ECHOLab has not published, we reimplement the station-level
+      half of <a href="https://doi.org/10.1021/acs.est.2c02934">Childs et al.
+      (2022)</a>: build a complete location × day panel; mark a day as smoke if
+      any HMS plume polygon covers the point; take the background as the median
+      PM2.5 over <em>non-smoke</em> days in the same location and calendar month,
+      pooled across the year before, the year itself, and the year after; and set
+      smoke PM2.5 to the positive part of the difference on smoke days, and
+      exactly zero otherwise.
+    </p>
+    <p>
+      Two deliberate deviations, both of which make our numbers slightly less
+      good than the published ones. The three-year background window is
+      <em>centered</em>, which is impossible for the current year, so from
+      <span id="trailing-year">the current year</span> onward we use a trailing
+      window and label those values provisional. And we skip the HYSPLIT/AOD
+      gap-filling and the gradient-boosted spatial interpolation entirely — we
+      need point estimates at ten places, not a national grid.
+    </p>
+    <p id="crossval-note" class="crossval"></p>
+
+    <h3>Known holes in the monitoring network</h3>
+    <ul>
+      <li><strong>Napa</strong> is measured from January 2007 to 20 May 2021 by
+        two monitors 4 km apart (<code>06-055-0003</code>, then
+        <code>06-055-0004</code>), stitched into one series. It has had
+        <em>no</em> EPA PM2.5 monitor since. Before 2007 and after 2021 the
+        smoke line is the modelled grid and total PM2.5 is simply absent.</li>
+      <li><strong>Half Moon Bay</strong> has never had one — there is no EPA site
+        anywhere on the San Mateo coast. Its entire series is modelled.</li>
+      <li><strong>Santa Rosa</strong> has had no PM2.5 monitor since its 5th St
+        site closed in December 2013; Sebastopol, about 12 km southwest, took
+        over in 2014 and is what this series uses.</li>
+      <li><strong>Livermore's</strong> monitor was replaced at the end of
+        January 2024 (<code>06-001-0007</code> → <code>06-001-0016</code>, 1.2 km
+        away). The two are stitched into one series; without that the inland
+        East Bay line simply stops.</li>
+      <li><strong>Point Reyes</strong> reports under EPA parameter 88502, not
+        88101. Pull only 88101 and the region's best coastal background site
+        vanishes.</li>
+      <li><strong>Most of the Bay Area stops in 2024.</strong> BAAQMD has
+        submitted no PM2.5 to EPA for 2025 or later — not to the bulk files and
+        not to the API. Only Point Reyes and Santa Cruz, which are run by other
+        agencies, continue past 2024.</li>
+    </ul>
+
+    <h3>Reproducing this</h3>
+    <p>
+      Everything here is rebuilt from public sources by one script. Code is MIT;
+      data is CC BY-SA 4.0, inherited from ECHOLab and not optional.
+      <a href="https://github.com/gsbdarc/bay-area-smoke">Source, data, and the
+      full method are on GitHub.</a>
+    </p>
+    <p class="generated" id="generated"></p>
+  </section>
+</main>
+
+<footer class="page-foot">
+  <div class="wrap">
+    <p>
+      Data: US EPA AirData &amp; AQS · NOAA Hazard Mapping System ·
+      Stanford ECHOLab (Childs et al. 2022).
+      Built at the Stanford GSB DARC.
+    </p>
+    <button type="button" id="theme-toggle" class="ghost">Switch theme</button>
+  </div>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
