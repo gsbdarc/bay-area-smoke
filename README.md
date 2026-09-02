@@ -44,6 +44,36 @@ four rather than drawing one confident-looking line:
 Smoke attribution cannot start before **2005-08-05**, when NOAA's smoke-plume record
 begins.
 
+### The smoke layer is frozen at 2023, and probably staying there
+
+ECHOLab's published product ends **2023-12-31**, and there is no sign of a successor.
+Their page still says *"Data currently go through Dec 2023; we plan to add 2024 data by
+Jan 2025"* — a deadline now **20 months** past. Harvard Dataverse has exactly one
+published version (v1.0, 2006–2020, released 2024-02-26); the 2006–2023 v2 is still
+labelled beta on Dropbox. Their code repository was last committed to in June 2025,
+with messages like *"updated interpolation script used on revisions"* — the pattern of
+a paper revision, not a data release.
+
+So **do not plan around a v3 arriving.** We extend the series ourselves from 2024, and
+where we can't, the record honestly stops.
+
+### Why a missing monitor is not the same as a missing estimate
+
+Worth understanding, because it explains the shape of our gaps. ECHOLab's method does
+not substitute a nearby monitor when one is absent — it *predicts* each 10 km cell from
+satellite aerosol depth, distance to active fires, ERA5 meteorology, elevation and land
+cover, using a gradient-boosted model trained on every reporting monitor nationally.
+
+That is why **Half Moon Bay, which has never had a monitor, still has 6,574 days of
+smoke estimates** here — including 94 µg/m³ during the Camp Fire.
+
+We reimplemented only the station-level half of their method (their script `04_01`),
+which needs a local measurement. So our extension covers 2024 onward *only where a
+monitor still reports*. Napa (no monitor since 2021) and Half Moon Bay (never) simply
+stop when ECHOLab stops. Replicating the interpolation is possible — their repository is
+the recipe — but it means Earth Engine, ERA5 and a trained model, and two of their
+scripts are written for an HPC cluster.
+
 ### The 2025 hole, and why it is a moving target
 
 The plan assumed the keyed AQS API would serve uncertified data and so cover
@@ -65,8 +95,18 @@ It is the same instruments through a less-processed channel, so it is labelled
 `provisional-airnow` and ranked *below* both certified bulk and the AQS API —
 it only ever fills a hole, never overwrites a better number.
 
-Livermore is absent from AirNow entirely, and Napa and Half Moon Bay have no
-monitor to report, so those three still end where their instruments do.
+Three locations still end where their instruments do, and in every case the
+instrument is genuinely gone rather than merely absent from one feed:
+
+- **Napa** — no monitor since 2021-05-19
+- **Half Moon Bay** — never had one
+- **Livermore** — `06-001-0007` ended 2024-01-31 and its replacement
+  `06-001-0016` ran only 2023–2024 before also stopping
+
+Livermore was checked against four independent sources (EPA bulk, the AQS API,
+AirNow, and California's own AQMIS2) and is absent from all of them, while
+Pleasanton and Oakland appear on the same CARB page. BAAQMD appears to have
+consolidated Livermore Valley coverage into Pleasanton – Owens Ct, 12 km away.
 
 The size of the hole remains in flux, and any number written here goes stale.
 **The authoritative answer is the per-location coverage in
@@ -85,10 +125,14 @@ Three real holes in the monitoring network that would otherwise read as good new
 - **Napa has had no EPA PM2.5 monitor since 2021-05-20.** Its line comes from the
   modeled grid, not from measurement.
 - **Half Moon Bay has never had one.** There is no EPA site on the San Mateo coast.
-- **Santa Rosa has no PM2.5 monitor**; Sebastopol is the nearest, ~12 km southwest.
+- **Santa Rosa has had no PM2.5 monitor since 2013**; Sebastopol, 10.4 km southwest,
+  took over in 2014 and is what this series uses.
+- **Livermore lost both of its monitors.** `06-001-0007` ran 2000 → 2024-01-31, was
+  replaced by `06-001-0016`, and that one stopped at the end of 2024. Two of our ten
+  locations — Livermore and Napa — are now measuring nothing at all.
 
-And one artifact that would read as a trend: Livermore's monitor was **replaced on
-2024-02-04** (site `06-001-0007` → `06-001-0016`). The pipeline stitches them.
+And one artifact that would read as a trend: Livermore's monitor **swap at the end of
+January 2024** (`06-001-0007` → `06-001-0016`). The pipeline stitches the two.
 
 ## How to reproduce
 

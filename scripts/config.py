@@ -237,8 +237,9 @@ LOCATIONS: tuple[Location, ...] = (
             Monitor("06-097-0004", 38.403765, -122.818294, "Sebastopol"),
         ),
         coverage_note=(
-            "Santa Rosa itself has no PM2.5 monitor. Sebastopol, ~12 km "
-            "southwest, is the nearest measurement."
+            "Santa Rosa has had no PM2.5 monitor since its 5th St site closed "
+            "in December 2013. Sebastopol, 10.4 km southwest, took over in "
+            "2014 and is what this series measures."
         ),
     ),
     Location(

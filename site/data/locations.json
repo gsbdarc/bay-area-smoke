@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-09-01T21:22:54+00:00",
+ "generated_utc": "2026-09-02T00:36:43+00:00",
  "start": "2000-01-01",
  "end": "2026-08-31",
  "thresholds": {
@@ -591,7 +591,7 @@
    "lat": 38.403765,
    "lon": -122.818294,
    "blurb": "Sonoma wine country, near the 2017 Tubbs fire footprint.",
-   "coverage_note": "Santa Rosa itself has no PM2.5 monitor. Sebastopol, ~12 km southwest, is the nearest measurement.",
+   "coverage_note": "Santa Rosa has had no PM2.5 monitor since its 5th St site closed in December 2013. Sebastopol, 10.4 km southwest, took over in 2014 and is what this series measures.",
    "grid_id_10km": 163276,
    "grid_match": "contains",
    "monitors": [
