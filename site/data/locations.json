@@ -1,7 +1,7 @@
 {
- "generated_utc": "2026-10-01T06:47:00+00:00",
+ "generated_utc": "2026-11-01T06:29:41+00:00",
  "start": "2000-01-01",
- "end": "2026-09-30",
+ "end": "2026-10-31",
  "thresholds": {
   "aqi": 101,
   "smoke_pm": 5.0
@@ -408,10 +408,10 @@
     }
    ],
    "pm25_first": "2000-01-01",
-   "pm25_last": "2026-01-29",
-   "pm25_days": 2870,
+   "pm25_last": "2026-02-28",
+   "pm25_days": 2880,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2026-01-29"
+   "smoke_last": "2026-02-28"
   },
   {
    "slug": "half-moon-bay",
@@ -447,10 +447,10 @@
     }
    ],
    "pm25_first": "2000-01-01",
-   "pm25_last": "2026-09-30",
-   "pm25_days": 8849,
+   "pm25_last": "2026-10-31",
+   "pm25_days": 8880,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2026-09-29"
+   "smoke_last": "2026-10-30"
   },
   {
    "slug": "oakland",
@@ -476,10 +476,10 @@
     }
    ],
    "pm25_first": "2007-11-02",
-   "pm25_last": "2026-09-30",
-   "pm25_days": 6547,
+   "pm25_last": "2026-10-31",
+   "pm25_days": 6578,
    "smoke_first": "2006-01-01",
-   "smoke_last": "2026-09-29"
+   "smoke_last": "2026-10-30"
   },
   {
    "slug": "redwood-city",
@@ -499,10 +499,10 @@
     }
    ],
    "pm25_first": "2000-01-01",
-   "pm25_last": "2026-09-30",
-   "pm25_days": 8000,
+   "pm25_last": "2026-10-31",
+   "pm25_days": 8031,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2026-09-29"
+   "smoke_last": "2026-10-30"
   },
   {
    "slug": "san-jose",
@@ -522,10 +522,10 @@
     }
    ],
    "pm25_first": "2002-10-05",
-   "pm25_last": "2026-09-30",
-   "pm25_days": 8412,
+   "pm25_last": "2026-10-31",
+   "pm25_days": 8443,
    "smoke_first": "2005-08-05",
-   "smoke_last": "2026-09-29"
+   "smoke_last": "2026-10-30"
   },
   {
    "slug": "livermore",
@@ -603,10 +603,10 @@
     }
    ],
    "pm25_first": "2014-01-09",
-   "pm25_last": "2026-09-30",
-   "pm25_days": 4471,
+   "pm25_last": "2026-10-31",
+   "pm25_days": 4502,
    "smoke_first": "2006-01-01",
-   "smoke_last": "2026-09-29"
+   "smoke_last": "2026-10-30"
   },
   {
    "slug": "santa-cruz",
@@ -626,10 +626,10 @@
     }
    ],
    "pm25_first": "2000-01-07",
-   "pm25_last": "2026-09-30",
-   "pm25_days": 6528,
+   "pm25_last": "2026-10-31",
+   "pm25_days": 6559,
    "smoke_first": "2005-08-08",
-   "smoke_last": "2026-09-29"
+   "smoke_last": "2026-10-30"
   }
  ],
  "crossval": {
@@ -696,11 +696,11 @@
  },
  "api_status": {
   "ok": true,
-  "rows": 6621,
+  "rows": 6631,
   "calls": 20,
   "first_year": 2025,
   "last_year": 2026,
-  "checked_utc": "2026-10-01T06:46:12+00:00",
+  "checked_utc": "2026-11-01T06:29:01+00:00",
   "errors": [],
   "note": ""
  }
